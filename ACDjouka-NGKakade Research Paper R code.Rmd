@@ -1,0 +1,180 @@
+---
+title: "Untitled"
+author: "Namrata Kakade"
+date: "October 28, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library("randomForest")
+library("klaR")
+library("caret")
+library("rpart")
+library("class")
+library("Metrics")
+library("neuralnet")
+library("ada")
+library("gbm")
+library ("e1071")
+library("adabag")
+library("mlbench")
+library("ipred")
+library("ineq")
+library("ROCR")
+library("rminer")
+
+
+setwd("F:/Namrata Docs/Harrisburg/Semester3/Data mining/Project")
+
+train <- read.csv("F:/Namrata Docs/Harrisburg/Semester3/Data mining/Project/train.csv")
+
+#Gini index
+
+ineq(train$RESOURCE, type="Gini")
+
+ineq(train$MGR_ID, type="Gini")
+
+ineq(train$ROLE_ROLLUP_1, type="Gini")
+
+ineq(train$ROLE_ROLLUP_2, type="Gini")
+
+ineq(train$ROLE_DEPTNAME, type="Gini")
+
+ineq(train$ROLE_TITLE, type="Gini")
+
+ineq(train$ROLE_FAMILY_DESC, type="Gini")
+
+ineq(train$ROLE_FAMILY, type="Gini")
+
+ineq(train$ROLE_CODE, type="Gini")
+
+Access_train <- train[c(-7, -8, -10)]
+
+write.csv(Access_train, file="Access_train.csv")
+
+Access_data <- read.csv("F:/Namrata Docs/Harrisburg/Semester3/Data mining/Project/Access_train.csv", header=TRUE)
+attach(Access_data)
+value <- as.integer(1)
+write("Employee access data set:", file="Result.txt",append=TRUE)
+
+
+ # write(paste("Iteration:",i), file="Result.txt",append=TRUE)
+  
+  sample_set <- floor(0.3 * nrow(Access_data))
+  test_set <- sample(seq_len(nrow(Access_data)), size = sample_set)
+  Access.train = Access_data[-test_set,]
+  Access.test = Access_data[test_set,]
+  Class<-Access.test[,as.integer(value)]
+
+
+  #Naive Bayesian
+  Method1="Naive Bayesian"
+  Access.train$ACTION <- as.factor(Access.train$ACTION)
+  Access.train$RESOURCE <- as.integer(Access.train$RESOURCE)
+  Access.train$MGR_ID <- as.integer(Access.train$MGR_ID)
+  Access.train$ROLE_ROLLUP_1 <- as.integer(Access.train$ROLE_ROLLUP_1)
+  Access.train$ROLE_ROLLUP_2 <- as.integer(Access.train$ROLE_ROLLUP_2)
+  Access.train$ROLE_DEPTNAME <- as.integer(Access.train$ROLE_DEPTNAME)
+  #Access.train$ROLE_TITLE <- as.integer(Access.train$ROLE_TITLE)
+  #Access.train$ROLE_FAMILY_DESC <- as.integer(Access.train$ROLE_FAMILY_DESC)
+  Access.train$ROLE_FAMILY <- as.integer(Access.train$ROLE_FAMILY)
+  #Access.train$ROLE_CODE <- as.integer(Access.train$ROLE_CODE)
+  
+  Access.test$ACTION <- as.factor(Access.test$ACTION)
+  Access.test$RESOURCE <- as.integer(Access.test$RESOURCE)
+  Access.test$MGR_ID <- as.integer(Access.test$MGR_ID)
+  Access.test$ROLE_ROLLUP_1 <- as.integer(Access.test$ROLE_ROLLUP_1)
+  Access.test$ROLE_ROLLUP_2 <- as.integer(Access.test$ROLE_ROLLUP_2)
+  Access.test$ROLE_DEPTNAME <- as.integer(Access.test$ROLE_DEPTNAME)
+  #Access.test$ROLE_TITLE <- as.integer(Access.test$ROLE_TITLE)
+  #Access.test$ROLE_FAMILY_DESC <- as.integer(Access.test$ROLE_FAMILY_DESC)
+  Access.test$ROLE_FAMILY <- as.integer(Access.test$ROLE_FAMILY)
+  #Access.test$ROLE_CODE <- as.integer(Access.test$ROLE_CODE)
+
+  
+  model = naiveBayes(as.factor(ACTION) ~ ., data = Access.train)
+  model
+  naivepred <- predict(model, Access.test)
+  table <- table(naivepred, Access.test$ACTION)           
+  print(table)
+  accu <- (sum(diag(table))/sum(table))*100
+  method<-paste("Method:",Method1)
+  acc<-paste("Accuracy%:",accu)
+  nam <-paste(method, accu)
+  write(nam, file="Result.txt",append=TRUE)
+ print(acc)
+ 
+
+ #SVM
+  
+
+  Method2 = "SVM"
+  svmmodel= svm(as.factor(ACTION)~.,data = Access.train, cost =100, gamma=1000)
+  svmpred= predict(svmmodel, Access.test)
+  confi = table(svmpred, true = Access.test$ACTION)
+  print(confi)
+  accu <-(sum(diag(confi))/sum(confi))*100
+  method<-paste("Method:",Method2)
+  acc<-paste("Accuracy%:",accu)
+  nam <-paste(method, accu)
+  write(nam, file="Result.txt",append=TRUE)
+ print(acc)
+ 
+
+  #Bagging
+ 
+  Method3 = "Bagging"
+  form <- as.formula(paste("as.factor(ACTION) ~","." ))
+  bag <- ipred::bagging(form, data=Access.train, boos = TRUE,mfinal=10,
+                          control = rpart.control(cp = 0)) 
+  bagprediction<-predict(bag,Access.test)
+  table <- table(bagprediction,Access.test$ACTION)
+  #print(summary(bag))
+  print(table)
+  accu<- (sum(bagprediction==Access.test$ACTION))/length(Access.test$ACTION)*100.0
+  method<-paste("Method:",Method3)
+  acc<-paste("Accuracy%:",accu)
+  nam <-paste(method, accu)
+  write(nam, file="Result.txt",append=TRUE)
+ print(acc)
+ 
+
+ # Random Forest
+
+  Method4 = "Random Forest"
+
+  set.seed(200)
+  randomf <- randomForest(as.factor(ACTION)~.,data=Access.train,importance=TRUE, ntree=2000)
+  randomprediction<-predict(randomf,Access.test)
+  table <- table(randomprediction,Access.test$ACTION)
+  print(table)
+  accu<- (sum(randomprediction==Access.test$ACTION))/length(Access.test$ACTION)*100.0
+   method<-paste("Method:",Method4)
+  acc<-paste("Accuracy%:",accu)
+  nam <-paste(method, accu)
+  write(nam, file="Result.txt",append=TRUE)
+ print(acc)
+
+
+ #Boosting
+  Method5 = "Boosting"
+  names <- names(Access.train)
+  form1 <- as.formula(paste("as.factor(ACTION) ~","." ))
+  adaboost <- ada(form1, data = Access.train, iter=15, nu=0.5, type="discrete")
+  boostprediction<-predict(adaboost,Access.test)
+  table <- table(boostprediction,Access.test$ACTION)
+  print(table)
+  accu<- (sum(boostprediction==Access.test$ACTION))/length(Access.test$ACTION)*100.0
+  method<-paste("Method:",Method4)
+  acc<-paste("Accuracy%:",accu)
+  nam <-paste(method, accu)
+  write(nam, file="Result.txt",append=TRUE)
+ print(acc)
+ 
+ 
+
+```
