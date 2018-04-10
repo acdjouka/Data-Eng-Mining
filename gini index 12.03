@@ -1,0 +1,33 @@
+---
+title: "CISC Project Gini Index"
+author: "AC Djouka"
+date: "December 3, 2016"
+output: word_document
+---
+
+
+```{r}
+train2$ACTION <- as.factor(train2$ACTION)
+train2$RESOURCE <- as.factor(train2$RESOURCE)
+train2$MGR_ID <- as.factor(train2$MGR_ID)
+train2$ROLE_ROLLUP_1 <- as.factor(train2$ROLE_ROLLUP_1)
+train2$ROLE_ROLLUP_2 <- as.factor(train2$ROLE_ROLLUP_2)
+train2$ROLE_DEPTNAME <- as.factor(train2$ROLE_DEPTNAME)
+train2$ROLE_TITLE <- as.factor(train2$ROLE_TITLE)
+train2$ROLE_FAMILY_DESC <- as.factor(train2$ROLE_FAMILY_DESC)
+train2$ROLE_FAMILY <- as.factor(train2$ROLE_FAMILY)
+train2$ROLE_CODE <- as.factor(train2$ROLE_CODE)
+str(train2)
+ibrary("ineq")
+ineq(train2$RESOURCE, type="Gini")
+ineq(train2$MGR_ID, type="Gini")
+ineq(train2$ROLE_ROLLUP_1, type="Gini")
+ineq(train2$ROLE_ROLLUP_2, type="Gini")
+ineq(train2$ROLE_DEPTNAME, type="Gini")
+ineq(train2$ROLE_TITLE, type="Gini")
+ineq(train2$ROLE_FAMILY_DESC, type="Gini")
+ineq(train2$ROLE_FAMILY, type="Gini")
+ineq(train2$ROLE_CODE, type="Gini")
+final.train.2 <- train2[c(-7, -8, -10)]
+str(final.train.2)
+```
